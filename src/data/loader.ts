@@ -73,6 +73,13 @@ export function getProblem(problemId: string): Problem | undefined {
   return undefined;
 }
 
+export function getSectionIdForProblem(problemId: string): string | undefined {
+  for (const [sectionId, problems] of Object.entries(problemsBySection)) {
+    if (problems.some((p) => p.id === problemId)) return sectionId;
+  }
+  return undefined;
+}
+
 export function getAllProblems(): Problem[] {
   return Object.values(problemsBySection).flat();
 }

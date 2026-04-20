@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getProblem } from '../data/loader';
+import { getProblem, getSectionIdForProblem } from '../data/loader';
 import { getSavedCode, saveCode, markSolved, isSolved } from '../services/progress';
 import { runTests } from '../services/testRunner';
 import type { SubmissionResult } from '../types';
@@ -11,6 +11,7 @@ import './ProblemPage.css';
 export default function ProblemPage() {
   const { problemId } = useParams<{ problemId: string }>();
   const problem = getProblem(problemId || '');
+  const sectionId = getSectionIdForProblem(problemId || '');
 
   const [code, setCode] = useState('');
   const [result, setResult] = useState<SubmissionResult | null>(null);
@@ -78,6 +79,7 @@ export default function ProblemPage() {
     <div className="problem-page">
       <div className="problem-nav">
         <Link to="/" className="back-link">← Home</Link>
+{sectionId && <Link to={`/section/${sectionId}`} className="back-link">← Section</Link>}
         {solved && <span className="solved-badge">✓ Solved</span>}
       </div>
 
