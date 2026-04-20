@@ -53,7 +53,8 @@ export default function ProblemPage() {
       code,
       problem.testCases,
       problem.methodSignature.methodName,
-      problem.methodSignature.returnType
+      problem.methodSignature.returnType,
+      problem.methodSignature.params.map(p => p.type)
     );
 
     setResult(res);

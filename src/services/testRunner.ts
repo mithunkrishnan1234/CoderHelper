@@ -1,7 +1,7 @@
 import type { TestCase, TestResult, SubmissionResult } from '../types';
 import { submitCode, isCompileError, isTimeout, isRuntimeError } from './judge0';
 
-function serializeValue(value: unknown): string {
+function serializeValue(value: unknown, javaType?: string): string {
   if (Array.isArray(value)) {
     if (value.length > 0 && Array.isArray(value[0])) {
       // 2D array
@@ -12,7 +12,10 @@ function serializeValue(value: unknown): string {
     }
     return `new int[]{${value.join(',')}}`;
   }
-  if (typeof value === 'string') return `"${value}"`;
+  if (typeof value === 'string') {
+    if (javaType === 'char' && value.length === 1) return `'${value}'`;
+    return `"${value}"`;
+  }
   if (typeof value === 'boolean') return value ? 'true' : 'false';
   return String(value);
 }
@@ -24,9 +27,9 @@ function serializeExpected(value: unknown): string {
   return String(value);
 }
 
-function generateTestRunner(testCases: TestCase[], methodName: string, returnType: string): string {
+function generateTestRunner(testCases: TestCase[], methodName: string, returnType: string, paramTypes: string[]): string {
   const testCode = testCases.map((tc, i) => {
-    const args = tc.inputs.map(serializeValue).join(', ');
+    const args = tc.inputs.map((v, j) => serializeValue(v, paramTypes[j])).join(', ');
     const expected = serializeExpected(tc.expected);
     
     let comparison: string;
@@ -64,6 +67,8 @@ function generateTestRunner(testCases: TestCase[], methodName: string, returnTyp
       
       if (returnType === 'String') {
         comparison = `result${i} != null && result${i}.equals(${serializeValue(tc.expected)})`;
+      } else if (returnType === 'char') {
+        comparison = `result${i} == ${serializeValue(tc.expected, 'char')}`;
       } else if (returnType === 'double') {
         comparison = `Math.abs(result${i} - ${tc.expected}) < 0.01`;
       } else {
@@ -112,9 +117,10 @@ export async function runTests(
   userCode: string,
   testCases: TestCase[],
   methodName: string,
-  returnType: string
+  returnType: string,
+  paramTypes: string[] = []
 ): Promise<SubmissionResult> {
-  const testRunner = generateTestRunner(testCases, methodName, returnType);
+  const testRunner = generateTestRunner(testCases, methodName, returnType, paramTypes);
   const fullSource = userCode + '\n' + testRunner;
 
   try {
