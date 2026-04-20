@@ -1,7 +1,3 @@
-import axios from 'axios';
-
-const PISTON_API = 'https://emkc.org/api/v2/piston';
-
 interface PistonResult {
   status: { id: number; description: string };
   stdout: string | null;
@@ -11,83 +7,93 @@ interface PistonResult {
   memory: number | null;
 }
 
+const PISTON_URL = 'https://emkc.org/api/v2/piston/execute';
+const PROXY_URL = 'https://corsproxy.io/?' + encodeURIComponent(PISTON_URL);
+
+async function callPiston(url: string, body: object): Promise<Response> {
+  return fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
 export async function submitCode(sourceCode: string): Promise<PistonResult> {
+  const payload = {
+    language: 'java',
+    version: '*',
+    files: [{ name: 'Main.java', content: sourceCode }],
+    run_timeout: 10000,
+  };
+
+  let response: Response;
   try {
-    const response = await axios.post(
-      `${PISTON_API}/execute`,
-      {
-        language: 'java',
-        version: '*',
-        files: [{ name: 'Main.java', content: sourceCode }],
-        run_timeout: 10000,
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-        timeout: 30000,
-      }
-    );
-
-    const data = response.data;
-    const compileOutput = data.compile?.stderr || data.compile?.output || null;
-    const compileCode = data.compile?.code;
-    const runStdout = data.run?.stdout || null;
-    const runStderr = data.run?.stderr || null;
-    const runCode = data.run?.code;
-    const runSignal = data.run?.signal;
-
-    // Map Piston response to a normalized result
-    if (compileCode !== undefined && compileCode !== 0) {
-      return {
-        status: { id: 6, description: 'Compilation Error' },
-        stdout: null,
-        stderr: null,
-        compile_output: compileOutput,
-        time: null,
-        memory: null,
-      };
+    // Try direct first, fall back to CORS proxy
+    response = await callPiston(PISTON_URL, payload);
+  } catch {
+    try {
+      response = await callPiston(PROXY_URL, payload);
+    } catch {
+      throw new Error('Compilation service unavailable. Please try again.');
     }
+  }
 
-    if (runSignal === 'SIGKILL' || runSignal === 'SIGXCPU') {
-      return {
-        status: { id: 5, description: 'Time Limit Exceeded' },
-        stdout: runStdout,
-        stderr: runStderr,
-        compile_output: null,
-        time: null,
-        memory: null,
-      };
-    }
+  if (response.status === 429) {
+    throw new Error('Rate limit exceeded. Please wait a moment and try again.');
+  }
+  if (!response.ok) {
+    throw new Error('Compilation service unavailable. Please try again.');
+  }
 
-    if (runCode !== 0 && runCode !== undefined) {
-      return {
-        status: { id: 11, description: 'Runtime Error' },
-        stdout: runStdout,
-        stderr: runStderr,
-        compile_output: null,
-        time: null,
-        memory: null,
-      };
-    }
+  const data = await response.json();
+  const compileOutput = data.compile?.stderr || data.compile?.output || null;
+  const compileCode = data.compile?.code;
+  const runStdout = data.run?.stdout || null;
+  const runStderr = data.run?.stderr || null;
+  const runCode = data.run?.code;
+  const runSignal = data.run?.signal;
 
+  if (compileCode !== undefined && compileCode !== 0) {
     return {
-      status: { id: 3, description: 'Accepted' },
+      status: { id: 6, description: 'Compilation Error' },
+      stdout: null,
+      stderr: null,
+      compile_output: compileOutput,
+      time: null,
+      memory: null,
+    };
+  }
+
+  if (runSignal === 'SIGKILL' || runSignal === 'SIGXCPU') {
+    return {
+      status: { id: 5, description: 'Time Limit Exceeded' },
       stdout: runStdout,
       stderr: runStderr,
       compile_output: null,
       time: null,
       memory: null,
     };
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      if (error.response?.status === 429) {
-        throw new Error('Rate limit exceeded. Please wait a moment and try again.');
-      }
-      if (!error.response) {
-        throw new Error('Compilation service unavailable. Please try again.');
-      }
-    }
-    throw new Error('Compilation service unavailable. Please try again.');
   }
+
+  if (runCode !== 0 && runCode !== undefined) {
+    return {
+      status: { id: 11, description: 'Runtime Error' },
+      stdout: runStdout,
+      stderr: runStderr,
+      compile_output: null,
+      time: null,
+      memory: null,
+    };
+  }
+
+  return {
+    status: { id: 3, description: 'Accepted' },
+    stdout: runStdout,
+    stderr: runStderr,
+    compile_output: null,
+    time: null,
+    memory: null,
+  };
 }
 
 // Normalized status IDs (matching Judge0 convention)
