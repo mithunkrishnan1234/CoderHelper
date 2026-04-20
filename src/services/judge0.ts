@@ -1,4 +1,4 @@
-interface PistonResult {
+export interface CompileResult {
   status: { id: number; description: string };
   stdout: string | null;
   stderr: string | null;
@@ -7,35 +7,26 @@ interface PistonResult {
   memory: number | null;
 }
 
-const PISTON_URL = 'https://emkc.org/api/v2/piston/execute';
-const PROXY_URL = 'https://corsproxy.io/?' + encodeURIComponent(PISTON_URL);
+const WANDBOX_URL = 'https://wandbox.org/api/compile.json';
 
-async function callPiston(url: string, body: object): Promise<Response> {
-  return fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-}
-
-export async function submitCode(sourceCode: string): Promise<PistonResult> {
-  const payload = {
-    language: 'java',
-    version: '*',
-    files: [{ name: 'Main.java', content: sourceCode }],
-    run_timeout: 10000,
-  };
+export async function submitCode(sourceCode: string): Promise<CompileResult> {
+  // Wandbox uses filename "prog.java" so public classes other than "prog" fail.
+  // Strip "public" from class declarations to avoid filename mismatch.
+  const fixedSource = sourceCode.replace(/public\s+(class\s+)/g, '$1');
 
   let response: Response;
   try {
-    // Try direct first, fall back to CORS proxy
-    response = await callPiston(PISTON_URL, payload);
+    response = await fetch(WANDBOX_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        compiler: 'openjdk-jdk-22+36',
+        code: fixedSource,
+        save: false,
+      }),
+    });
   } catch {
-    try {
-      response = await callPiston(PROXY_URL, payload);
-    } catch {
-      throw new Error('Compilation service unavailable. Please try again.');
-    }
+    throw new Error('Compilation service unavailable. Please try again.');
   }
 
   if (response.status === 429) {
@@ -46,69 +37,79 @@ export async function submitCode(sourceCode: string): Promise<PistonResult> {
   }
 
   const data = await response.json();
-  const compileOutput = data.compile?.stderr || data.compile?.output || null;
-  const compileCode = data.compile?.code;
-  const runStdout = data.run?.stdout || null;
-  const runStderr = data.run?.stderr || null;
-  const runCode = data.run?.code;
-  const runSignal = data.run?.signal;
 
-  if (compileCode !== undefined && compileCode !== 0) {
+  // Wandbox returns:
+  //   status: "0" = success, "1" = compile error, "2" = compile error
+  //   compiler_error: compilation errors
+  //   program_output: stdout
+  //   program_error: stderr (runtime)
+  //   signal: e.g. "SIGKILL" for TLE
+
+  const status = data.status;
+  const compilerError = data.compiler_error || '';
+  const stdout = data.program_output || '';
+  const stderr = data.program_error || '';
+  const signal = data.signal || '';
+
+  // Compilation error
+  if (status !== '0' && compilerError) {
     return {
       status: { id: 6, description: 'Compilation Error' },
       stdout: null,
       stderr: null,
-      compile_output: compileOutput,
+      compile_output: compilerError,
       time: null,
       memory: null,
     };
   }
 
-  if (runSignal === 'SIGKILL' || runSignal === 'SIGXCPU') {
+  // TLE / killed
+  if (signal === 'SIGKILL' || signal === 'SIGXCPU') {
     return {
       status: { id: 5, description: 'Time Limit Exceeded' },
-      stdout: runStdout,
-      stderr: runStderr,
+      stdout: stdout || null,
+      stderr: stderr || null,
       compile_output: null,
       time: null,
       memory: null,
     };
   }
 
-  if (runCode !== 0 && runCode !== undefined) {
+  // Runtime error (non-zero exit, no compile error)
+  if (status !== '0' && !compilerError) {
     return {
       status: { id: 11, description: 'Runtime Error' },
-      stdout: runStdout,
-      stderr: runStderr,
+      stdout: stdout || null,
+      stderr: stderr || null,
       compile_output: null,
       time: null,
       memory: null,
     };
   }
 
+  // Success
   return {
     status: { id: 3, description: 'Accepted' },
-    stdout: runStdout,
-    stderr: runStderr,
+    stdout: stdout || null,
+    stderr: stderr || null,
     compile_output: null,
     time: null,
     memory: null,
   };
 }
 
-// Normalized status IDs (matching Judge0 convention)
-export function isCompileError(result: PistonResult): boolean {
+export function isCompileError(result: CompileResult): boolean {
   return result.status.id === 6;
 }
 
-export function isTimeout(result: PistonResult): boolean {
+export function isTimeout(result: CompileResult): boolean {
   return result.status.id === 5;
 }
 
-export function isRuntimeError(result: PistonResult): boolean {
+export function isRuntimeError(result: CompileResult): boolean {
   return result.status.id >= 7 && result.status.id <= 12;
 }
 
-export function isSuccess(result: PistonResult): boolean {
+export function isSuccess(result: CompileResult): boolean {
   return result.status.id === 3;
 }
