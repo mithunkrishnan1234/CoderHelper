@@ -1,0 +1,26 @@
+import type { Section } from '../types';
+
+export const sections: Section[] = [
+  { id: 'basics', name: 'Basics & Syntax', order: 1, description: 'Variables, data types, I/O, and type casting' },
+  { id: 'operators', name: 'Operators & Expressions', order: 2, description: 'Arithmetic, logical, bitwise, and ternary operators' },
+  { id: 'control-flow', name: 'Control Flow', order: 3, description: 'If/else, switch, loops, and nested loops' },
+  { id: 'functions', name: 'Functions & Methods', order: 4, description: 'Parameters, return types, overloading, and recursion intro' },
+  { id: 'strings', name: 'Strings', order: 5, description: 'String manipulation, parsing, and StringBuilder' },
+  { id: 'arrays', name: 'Arrays', order: 6, description: 'Traversal, rotation, prefix sums, and searching' },
+  { id: 'arrays-2d', name: '2D Arrays & Matrices', order: 7, description: 'Spiral traversal, matrix search, and transpose' },
+  { id: 'collections', name: 'ArrayList & Collections', order: 8, description: 'List operations, sorting, and iterators' },
+  { id: 'hashmap', name: 'HashMap & HashSet', order: 9, description: 'Frequency counting, two-sum patterns, and grouping' },
+  { id: 'stack-queue', name: 'Stack & Queue', order: 10, description: 'Balanced parentheses, next greater element, and BFS basics' },
+  { id: 'linked-list', name: 'Linked Lists', order: 11, description: 'Reversal, cycle detection, and merging' },
+  { id: 'classes', name: 'Classes & Objects', order: 12, description: 'Class design, constructors, this, and static' },
+  { id: 'inheritance', name: 'Inheritance & Polymorphism', order: 13, description: 'Abstract classes, interfaces, and method overriding' },
+  { id: 'exceptions', name: 'Exception Handling', order: 14, description: 'Try/catch, custom exceptions, and finally blocks' },
+  { id: 'generics-streams', name: 'Generics & Streams', order: 15, description: 'Type parameters, lambdas, and Stream API' },
+  { id: 'sorting-searching', name: 'Sorting & Searching', order: 16, description: 'Binary search variants, merge sort, and quick sort' },
+  { id: 'recursion', name: 'Recursion & Backtracking', order: 17, description: 'Subsets, permutations, and N-queens' },
+  { id: 'trees', name: 'Trees (Binary & BST)', order: 18, description: 'Traversals, LCA, and BST validation' },
+  { id: 'graphs', name: 'Graphs', order: 19, description: 'BFS, DFS, topological sort, and shortest path' },
+  { id: 'dynamic-programming', name: 'Dynamic Programming', order: 20, description: 'Knapsack, LCS, coin change, and grid paths' },
+  { id: 'greedy', name: 'Greedy & Intervals', order: 21, description: 'Activity selection, merge intervals, and scheduling' },
+  { id: 'interview-patterns', name: 'Top Interview Patterns', order: 22, description: 'Sliding window, two pointers, fast/slow, monotonic stack' },
+];

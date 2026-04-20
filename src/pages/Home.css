@@ -1,0 +1,150 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.home {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.home-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.home-header h1 {
+  font-size: 2rem;
+  color: #e0e0e0;
+}
+
+.subtitle {
+  color: #888;
+  margin-top: 4px;
+}
+
+.stats-dashboard {
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: #1e1e2e;
+  border-radius: 10px;
+  padding: 16px 20px;
+  text-align: center;
+}
+
+.main-stat {
+  margin-bottom: 12px;
+}
+
+.stat-number {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #e0e0e0;
+}
+
+.stat-label {
+  color: #888;
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.stat-percentage {
+  color: #888;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #333;
+  border-radius: 3px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4caf50, #66bb6a);
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.stat-cards-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.stat-card.easy { border-top: 3px solid #4caf50; }
+.stat-card.medium { border-top: 3px solid #ff9800; }
+.stat-card.hard { border-top: 3px solid #f44336; }
+
+.stat-card.easy .stat-number { color: #4caf50; }
+.stat-card.medium .stat-number { color: #ff9800; }
+.stat-card.hard .stat-number { color: #f44336; }
+
+.sections-list h2 {
+  color: #e0e0e0;
+  margin-bottom: 12px;
+  font-size: 1.2rem;
+}
+
+.section-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1e1e2e;
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-bottom: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.2s;
+}
+
+.section-card:hover {
+  background: #2a2a3e;
+}
+
+.section-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.section-order {
+  background: #333;
+  color: #888;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.section-info h3 {
+  color: #e0e0e0;
+  font-size: 15px;
+  margin-bottom: 2px;
+}
+
+.section-info p {
+  color: #888;
+  font-size: 12px;
+}
+
+.section-progress {
+  color: #888;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
