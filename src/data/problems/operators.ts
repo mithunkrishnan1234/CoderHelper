@@ -246,7 +246,7 @@ export const problems: Problem[] = [
       { name: 'Basic case', inputs: [10, 5, 3], expected: 23 },
       { name: 'All ones', inputs: [1, 1, 1], expected: 1 },
       { name: 'Larger values', inputs: [100, 10, 5], expected: 140 },
-      { name: 'Negative a', inputs: [-12, 4, 2], expected: -7 },
+      { name: 'Negative a', inputs: [-12, 4, 2], expected: -1 },
     ],
     hints: [
       'Java follows standard math precedence: * and / before + and -.',
