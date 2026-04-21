@@ -17,6 +17,10 @@ function serializeValue(value: unknown, javaType?: string): string {
     return `"${value}"`;
   }
   if (typeof value === 'boolean') return value ? 'true' : 'false';
+  if (typeof value === 'number') {
+    if (javaType === 'long' || Math.abs(value) > 2147483647) return `${value}L`;
+    return String(value);
+  }
   return String(value);
 }
 
@@ -72,7 +76,7 @@ function generateTestRunner(testCases: TestCase[], methodName: string, returnTyp
       } else if (returnType === 'double') {
         comparison = `Math.abs(result${i} - ${tc.expected}) < 0.01`;
       } else {
-        comparison = `result${i} == ${serializeValue(tc.expected)}`;
+        comparison = `result${i} == ${serializeValue(tc.expected, returnType)}`;
       }
       
       return `
