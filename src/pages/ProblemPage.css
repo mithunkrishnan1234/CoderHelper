@@ -184,6 +184,51 @@
   cursor: not-allowed;
 }
 
+.toolbar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.run-code-btn {
+  background: #2196f3;
+}
+
+.run-code-btn:hover {
+  background: #1e88e5;
+}
+
+.submit-btn {
+  background: #4caf50;
+}
+
+.submit-btn:hover {
+  background: #43a047;
+}
+
+.stdout {
+  background: #1a2e1a;
+  border-left: 3px solid #4caf50;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-top: 8px;
+  color: #c8e6c9;
+  font-size: 13px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.no-output {
+  color: #888;
+  font-style: italic;
+  margin-top: 8px;
+}
+
+.output-panel h4 {
+  color: #e0e0e0;
+  margin: 0 0 8px 0;
+  font-size: 14px;
+}
+
 .results-panel {
   margin-top: 12px;
 }

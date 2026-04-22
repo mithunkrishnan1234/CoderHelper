@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { getProblem, getSectionIdForProblem } from '../data/loader';
 import { getSavedCode, saveCode, markSolved, isSolved } from '../services/progress';
 import { runTests } from '../services/testRunner';
+import { submitCode } from '../services/judge0';
 import type { SubmissionResult } from '../types';
 import CodeEditor from '../components/CodeEditor';
 import TestResults from '../components/TestResults';
@@ -15,7 +16,9 @@ export default function ProblemPage() {
 
   const [code, setCode] = useState('');
   const [result, setResult] = useState<SubmissionResult | null>(null);
+  const [runOutput, setRunOutput] = useState<{ stdout: string; stderr: string } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingRun, setLoadingRun] = useState(false);
   const [solved, setSolved] = useState(false);
   const [hintsRevealed, setHintsRevealed] = useState(0);
 
@@ -25,6 +28,7 @@ export default function ProblemPage() {
       setCode(saved || problem.boilerplate);
       setSolved(isSolved(problem.id));
       setResult(null);
+      setRunOutput(null);
       setHintsRevealed(0);
     }
   }, [problem]);
@@ -41,13 +45,37 @@ export default function ProblemPage() {
       setCode(problem.boilerplate);
       saveCode(problem.id, problem.boilerplate);
       setResult(null);
+      setRunOutput(null);
     }
+  };
+
+  const handleRun = async () => {
+    if (!problem) return;
+    setLoadingRun(true);
+    setRunOutput(null);
+    setResult(null);
+
+    try {
+      const res = await submitCode(code);
+      setRunOutput({
+        stdout: res.stdout || '',
+        stderr: res.compile_output || res.stderr || '',
+      });
+    } catch (error) {
+      setRunOutput({
+        stdout: '',
+        stderr: error instanceof Error ? error.message : 'Compilation service unavailable.',
+      });
+    }
+
+    setLoadingRun(false);
   };
 
   const handleRunTests = async () => {
     if (!problem) return;
     setLoading(true);
     setResult(null);
+    setRunOutput(null);
 
     const res = await runTests(
       code,
@@ -140,18 +168,43 @@ export default function ProblemPage() {
         <div className="editor-panel">
           <div className="editor-toolbar">
             <button className="reset-btn" onClick={handleReset}>↺ Reset</button>
-            <button
-              className="run-btn"
-              onClick={handleRunTests}
-              disabled={loading}
-            >
-              {loading ? '⏳ Running...' : '▶ Run Tests'}
-            </button>
+            <div className="toolbar-actions">
+              <button
+                className="run-btn run-code-btn"
+                onClick={handleRun}
+                disabled={loadingRun || loading}
+              >
+                {loadingRun ? '⏳ Running...' : '▶ Run'}
+              </button>
+              <button
+                className="run-btn submit-btn"
+                onClick={handleRunTests}
+                disabled={loading || loadingRun}
+              >
+                {loading ? '⏳ Testing...' : '✓ Submit'}
+              </button>
+            </div>
           </div>
 
           <CodeEditor code={code} onChange={handleCodeChange} />
 
           <div className="results-panel">
+            {runOutput && (
+              <div className="output-panel">
+                <h4>Output</h4>
+                {runOutput.stderr && (
+                  <div className="error-panel">
+                    <pre>{runOutput.stderr}</pre>
+                  </div>
+                )}
+                {runOutput.stdout && (
+                  <pre className="stdout">{runOutput.stdout}</pre>
+                )}
+                {!runOutput.stdout && !runOutput.stderr && (
+                  <p className="no-output">No output</p>
+                )}
+              </div>
+            )}
             {result && result.status === 'success' && result.testResults && (
               <TestResults results={result.testResults} />
             )}
