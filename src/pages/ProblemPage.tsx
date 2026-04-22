@@ -56,7 +56,11 @@ export default function ProblemPage() {
     setResult(null);
 
     try {
-      const res = await submitCode(code);
+      let source = code;
+      if (!/public\s+static\s+void\s+main\s*\(/.test(source)) {
+        source += '\nclass Main { public static void main(String[] args) { System.out.println("Compiled successfully. Add a main method or use Submit to run tests."); } }';
+      }
+      const res = await submitCode(source);
       setRunOutput({
         stdout: res.stdout || '',
         stderr: res.compile_output || res.stderr || '',
